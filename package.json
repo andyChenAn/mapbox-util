@@ -1,5 +1,5 @@
 {
-  "name": "mapbox-util111",
+  "name": "mapbox-util",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
+    "mapbox-gl": "^2.7.1",
     "vue": "^2.6.11"
   },
   "devDependencies": {
