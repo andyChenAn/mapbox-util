@@ -23,10 +23,18 @@ export default {
                 type: "Point",
                 coordinates: [116.390629, 39.924317],
               },
+              properties : {
+                image: require("@/assets/car.png"),
+                rotate : 40,
+                type : 'white'
+              }
             },
           ],
         },
-        image: require("@/assets/blue.png"),
+        rotate: 90,
+        opacity: 1,
+        size : [64 , 30],
+        scale : 0.5
       });
     },
   },
