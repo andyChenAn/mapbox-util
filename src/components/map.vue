@@ -30,12 +30,12 @@ export default {
               },
               properties : {
                 type : 'aa',
-                url : require('@/assets/car1.png'),
               }
             },
           ],
         },
         field : 'type',
+        images : [require('@/assets/car1.png')],
         shape (type) {
           return type + '111';
         },

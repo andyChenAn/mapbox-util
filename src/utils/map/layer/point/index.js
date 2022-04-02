@@ -14,7 +14,27 @@ class PointLayer {
     })
   }
   addLayer (options) {
-    const { name , data , field , shape , rotate , url , ...rest } = options;
+    const { name , data , field , shape , rotate , images , url , ...rest } = options;
+    let arr = [];
+    images.forEach(image => {
+      arr.push(this.loadImage(image));
+    });
+    Promise.all(arr).then(res => {
+      res.map(image => {
+        this.map.addImage('aa' , image);
+      })
+      this.map.addLayer(Object.assign({} , rest , {
+        id : name,
+        type : 'symbol',
+        source : {
+          type : 'geojson',
+          data : data
+        },
+        layout : {
+          'icon-image' : 'aa',
+        }
+      }));
+    })
     // if (url) {
     //   this.loadImage(url).then(image => {
     //     this.map.addImage()
@@ -24,25 +44,8 @@ class PointLayer {
     //   item.properties.shape = shape(item.properties[field]);
     //   return item;
     // })
-    data.features.map(async item => {
-      if (item.properties.url) {
-        let image = await this.loadImage(item.properties.url);
-        console.log(image)
-      }
-    })
-    console.log(121)
-    this.map.addLayer(Object.assign({} , {
-      id : name,
-      type : 'symbol',
-      source : {
-        type : 'geojson',
-        data : data
-      },
-      layout : {
-        'icon-image' : ['get' , 'shape'],
-        'icon-rotate' : ['get' , 'rotate']
-      }
-    } , rest));
+   
+    
     return this.map.getLayer(options.name)
   }
 }
