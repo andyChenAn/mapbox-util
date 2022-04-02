@@ -23,43 +23,41 @@ class PointLayer {
   }
   addLayer (options) {
     const { name, data, image, rotate = 0, opacity = 1, size = 16 , scale } = options;
-        data.features.map(item => {
-          //const img = new Image();
-          // size可以是一个数字，或者数组，如果是数组的话，那么width是第一个，height是第二个，如果是数字，那么width和height是一样的
-          // img.width = size[1];
-          // img.height = size[0];
-          // img.src = item.properties.image;
-          // img.onload = () => {
-          //   this.map.addImage(item.properties.type , img);
-          // }
-          this.map.loadImage(item.properties.image , (err , image) => {
-            if (err) {
-              throw err;
-            }
-            this.map.addImage(item.properties.type , image , {
-              pixelRatio : 1
-            });
-          })
+        // data.features.map(item => {
+        //   //const img = new Image();
+        //   //size可以是一个数字，或者数组，如果是数组的话，那么width是第一个，height是第二个，如果是数字，那么width和height是一样的
+        //   // img.width = size[1];
+        //   // img.height = size[0];
+        //   // img.src = item.properties.image;
+        //   // img.onload = () => {
+        //   //   this.map.addImage(item.properties.type , img);
+        //   // }
+        //   // this.map.loadImage(item.properties.image , (err , image) => {
+        //   //   if (err) {
+        //   //     throw err;
+        //   //   }
+        //   //   this.map.addImage(item.properties.type , image , {
+        //   //     pixelRatio : 1
+        //   //   });
+        //   // })
+        // })
+        this.map.addLayer({
+          id: name,
+          type: 'symbol',
+          source: {
+            type: 'geojson',
+            data: data,
+          },
+          layout: {
+            'icon-image': '{type}',
+            'icon-rotate': ['get' , 'rotate'],
+            'icon-size' : scale,
+            'icon-allow-overlap': true
+          },
+          paint: {
+            'icon-opacity': opacity,
+          }
         })
-        setTimeout(() => {
-          this.map.addLayer({
-            id: name,
-            type: 'symbol',
-            source: {
-              type: 'geojson',
-              data: data,
-            },
-            layout: {
-              'icon-image': '{type}',
-              'icon-rotate': ['get' , 'rotate'],
-              'icon-size' : scale,
-              'icon-allow-overlap': true
-            },
-            paint: {
-              'icon-opacity': opacity,
-            }
-          })
-        } , 1000)
   }
 }
 export default PointLayer;
