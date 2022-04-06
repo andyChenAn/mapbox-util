@@ -2,7 +2,7 @@ class PointLayer {
   constructor (mapbox) {
     this.map = mapbox;
   }
-  addLayer (options) {
+  async addLayer (options) {
     const {
       name,
       data,
@@ -16,9 +16,10 @@ class PointLayer {
         if (item.properties && typeof item.properties === 'object') {
           if (field && typeof shape === 'function') {
             const shapeValue = item.properties[field];
-            shape(shapeValue);
+            item.properties._fieldValue = shape(shapeValue);
           }
         }
+        return item;
       })
     }
     this.map.addLayer({
@@ -27,6 +28,10 @@ class PointLayer {
       source : {
         type : 'geojson',
         data : data
+      },
+      layout : {
+        'icon-image' : ['get' , '_fieldValue'],
+        'icon-rotate' : ['get' , 'rotate']
       }
     });
     return this.map.getLayer(options.name)

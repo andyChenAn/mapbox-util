@@ -7,10 +7,7 @@ class Map {
     const map = new mapboxgl.Map(options);
     this.instance = map;
   }
-  /**
-   * 返回mapbox实例
-   * @returns mapbox实例
-   */
+  // 返回mapbox实例
   getMapbox () {
     return this.instance;
   }
@@ -73,6 +70,13 @@ class Map {
   removeImage (name) {
     this.instance.removeLayer(name);
   }
-  
+  /**
+   * 更新图标
+   * @param {string} name 图标名称
+   * @param {HTMLElement} image img标签元素
+   */
+  updateImage (name , image) {
+    this.instance.updateImage(name , image)
+  }
 }
 export default Map;
