@@ -7,44 +7,73 @@
   </div>
 </template>
 <script>
-import Map from '@/utils/map';
-import Layer from '@/utils/map/layer';
+import Map from "@/utils/map";
+import Layer from "@/utils/map/layer";
 export default {
   mounted() {
-    const map = new Map({
+    const myMap = new Map({
       container: "map",
       center: [116.390619, 39.924317],
-    }).getMapbox();
-    map.on('load' , () => {
-      const layer = new Layer(map);
-      layer.addPointLayer({
-        name : 'andy',
-        data: {
-          type: "FeatureCollection",
-          features: [
-            {
-              type: "Feature",
-              geometry: {
-                type: "Point",
-                coordinates: [116.390629, 39.924317],
+    });
+    const map = myMap.getMapbox();
+    map.on("load", async () => {
+      const urls = ['https://t7.baidu.com/it/u=4198287529,2774471735&fm=193&f=GIF' , 'https://t7.baidu.com/it/u=2168645659,3174029352&fm=193&f=GIF'];
+      const url = 'https://t7.baidu.com/it/u=4198287529,2774471735&fm=193&f=GIF';
+      const url2 = 'https://t7.baidu.com/it/u=2168645659,3174029352&fm=193&f=GIF';
+      const res = await myMap.loadImage(url , {width:200,height:100});
+      map.addImage('aa' , res);
+      map.addLayer({
+        id : 'bb',
+        source : {
+          type : 'geojson',
+          data : {
+            type: "FeatureCollection",
+            features: [
+              {
+                type: "Feature",
+                geometry: {
+                  type: "Point",
+                  coordinates: [116.390629, 39.924317],
+                },
               },
-              properties : {
-                type : 'aa',
-              }
-            },
-          ],
+            ],
+          }
         },
-        field : 'type',
-        images : [require('@/assets/car1.png')],
-        shape (type) {
-          return type + '111';
-        },
-        
+        type : 'symbol',
         layout : {
-          
+          'icon-image' : 'aa'
         }
       })
-    })
+      setTimeout(() => {
+      myMap.loadImage(url2 , {width:200,height:100}).then(res => {
+        myMap.updateImage('aa' , res);
+        map.removeLayer('bb');
+        map.addLayer({
+        id : 'cc',
+        source : {
+          type : 'geojson',
+          data : {
+            type: "FeatureCollection",
+            features: [
+              {
+                type: "Feature",
+                geometry: {
+                  type: "Point",
+                  coordinates: [116.390629, 39.924317],
+                },
+              },
+            ],
+          }
+        },
+        type : 'symbol',
+        layout : {
+          'icon-image' : 'aa'
+        }
+      })
+      })
+    } , 3000)
+    });
+    
   },
   // mounted() {
   //   const map = new Map(

@@ -1,11 +1,13 @@
 import PointLayer from './point/index';
 class Layer {
   constructor (mapbox) {
+    this._layers = [];
     this.map = mapbox;
     this.point = new PointLayer(mapbox);
   }
   addPointLayer (options) {
-    this.point.addLayer(options);
+    const layer = this.point.addLayer(options);
+    return layer;
   }
 }
 export default Layer;

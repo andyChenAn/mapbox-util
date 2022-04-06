@@ -13,7 +13,9 @@ export const mapOptions = {
   // 地图中心点
   center : [0 , 0],
   // 地图缩放级别
-  zoom : 15
+  zoom : 15,
+  // 淡入淡出的动画过渡时间
+  fadeDuration : 0
 }
 
 export default {
