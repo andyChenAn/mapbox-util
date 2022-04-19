@@ -8,7 +8,7 @@ class PointLayer {
   // 点图层（气泡，散点）
   addPointLayer (options) {
     // color : {field : 'xx' , callback : fn}/color : 'xx'
-    const { name , data , color , size , rotate , shape } = options;
+    const { name , data , color , size  = 1, rotate , shape } = options;
     const geojson = {
       type : 'FeatureCollection',
       features : []
@@ -24,20 +24,32 @@ class PointLayer {
         if (item.properties[shape.field]) {
           item.properties['_' + shape.field] = shape.handler(item.properties[shape.field])
         }
+      };
+      if (rotate && typeof rotate === 'object') {
+        if (item.properties[rotate.field]) {
+          item.properties['_' + rotate.field] = rotate.handler(item.properties[rotate.field]);
+        }
       }
       geojson.features.push(item);
     });
+    this.mapbox.addSource(name , {
+      type : 'geojson',
+      data : geojson
+    });
     this.mapbox.addLayer({
       id : name,
-      source : {
-        type : 'geojson',
-        data : geojson
-      },
+      source : name,
       type : 'symbol',
       layout : {
-        'icon-image' : ['get' , `_${typeof shape === 'string' ? shape : shape.field}`]
+        'icon-allow-overlap' : true,
+        "icon-size" : size,
+        'icon-image' : typeof shape === 'object' ? ['get' , `_${shape.field}`] : ['get' , shape],
+        'icon-rotate' : typeof rotate === 'object' ? ['get' , `_${rotate.field}`] : ['get' , rotate],
       }
-    })
+    });
+    const layer = this.mapbox.getLayer(name);
+    layer.options = options;
+    return layer;
   }
   // 文本标注图
   addTextLayer () {}
