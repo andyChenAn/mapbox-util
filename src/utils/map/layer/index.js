@@ -1,4 +1,5 @@
 import PointLayer from './point';
+import { initGeojsonProperty } from '../utils';
 class Layer {
   constructor (mapbox) {
     this.mapbox = mapbox;
@@ -55,25 +56,7 @@ class Layer {
    */
   updateLayer (layerName , geojson) {
     const layer = this.getLayerByName(layerName);
-    const { color , shape , rotate } = layer.options;
-    geojson.features.map(item => {
-      if (color && typeof color === 'object') {
-        if (item.properties[color.field]) {
-          item.properties['_' + color.field] = color.handler(item.properties[color.field]);
-        }
-      };
-      if (shape && typeof shape === 'object') {
-        if (item.properties[shape.field]) {
-          item.properties['_' + shape.field] = shape.handler(item.properties[shape.field])
-        }
-      };
-      if (rotate && typeof rotate === 'object') {
-        if (item.properties[rotate.field]) {
-          item.properties['_' + rotate.field] = rotate.handler(item.properties[rotate.field]);
-        }
-      }
-      return item;
-    })
+    geojson = initGeojsonProperty(geojson , layer.options);
     this.mapbox.getSource(layerName).setData(geojson);
   }
 }

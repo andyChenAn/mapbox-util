@@ -12,4 +12,28 @@ export function omit (target , omitList) {
     }
   }
   return res;
-}
+};
+
+/**
+ * 初始化geojson中的properties属性，主要用于添加interpolate语法的属性
+ * @param {object} geojson geojson数据对象
+ * @param {object} options 需要初始化的选项对象(调用各种addLayer传入的options)key , value
+ */
+export function initGeojsonProperty (geojson , options) {
+  if (options && typeof options === 'object') {
+    geojson.features.map(item => {
+      for (let key in options) {
+        if (
+          options[key] && 
+          typeof options[key] === 'object' && 
+          options[key].key && 
+          typeof options[key].value === 'function'
+        ) {
+          item.properties['_' + options[key].key] = options[key].value(item.properties[options[key].key]);
+        }
+      };
+      return item;
+    })
+  };
+  return geojson;
+};

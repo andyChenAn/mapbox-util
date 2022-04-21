@@ -1,3 +1,4 @@
+import { initGeojsonProperty } from '../../utils';
 /**
  * 点图层
  */
@@ -7,31 +8,9 @@ class PointLayer {
   }
   // 点图层（气泡，散点）
   addPointLayer (options) {
-    // color : {field : 'xx' , callback : fn}/color : 'xx'
-    const { name , data , color , size  = 1, rotate , shape } = options;
-    const geojson = {
-      type : 'FeatureCollection',
-      features : []
-    };
-    data.features.forEach(item => {
-      item.properties || (item.properties = {});
-      if (color && typeof color === 'object') {
-        if (item.properties[color.field]) {
-          item.properties['_' + color.field] = color.handler(item.properties[color.field]);
-        }
-      };
-      if (shape && typeof shape === 'object') {
-        if (item.properties[shape.field]) {
-          item.properties['_' + shape.field] = shape.handler(item.properties[shape.field])
-        }
-      };
-      if (rotate && typeof rotate === 'object') {
-        if (item.properties[rotate.field]) {
-          item.properties['_' + rotate.field] = rotate.handler(item.properties[rotate.field]);
-        }
-      }
-      geojson.features.push(item);
-    });
+    // color : {key : 'xx' , value : fn}/color : 'xx'
+    const { name , data , size , shape , rotate } = options;
+    const geojson = initGeojsonProperty(data , options);
     this.mapbox.addSource(name , {
       type : 'geojson',
       data : geojson
@@ -42,9 +21,15 @@ class PointLayer {
       type : 'symbol',
       layout : {
         'icon-allow-overlap' : true,
+        'text-allow-overlap' : true,
+        'text-field' : ['get' , 'title'],
+        'text-offset' : [0 , -2],
         "icon-size" : size,
-        'icon-image' : typeof shape === 'object' ? ['get' , `_${shape.field}`] : ['get' , shape],
-        'icon-rotate' : typeof rotate === 'object' ? ['get' , `_${rotate.field}`] : ['get' , rotate],
+        'icon-image' : typeof shape === 'object' ? ['get' , `_${shape.key}`] : ['get' , shape],
+        'icon-rotate' : typeof rotate === 'object' ? ['get' , `_${rotate.key}`] : ['get' , rotate],
+      },
+      paint : {
+        'text-color' : 'red'
       }
     });
     const layer = this.mapbox.getLayer(name);
@@ -54,9 +39,11 @@ class PointLayer {
   // 文本标注图
   addTextLayer () {}
   // 散点图/圈图
-  addCircleLayer () {}
+  addCircleLayer (options) {
+
+  }
   // 亮度图
-  addDotLayer () {}
+  addLightDotLayer () {}
   // 水波图
   addWaterWaveLayer () {}
 }

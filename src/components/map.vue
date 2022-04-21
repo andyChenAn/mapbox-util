@@ -1,7 +1,7 @@
 <template>
   <div class="box">
     <div class="btn-box">
-      <button>addIcon</button>
+      <button @click="addPoint">addIcon</button>
     </div>
     <div id="map"></div>
   </div>
@@ -9,33 +9,23 @@
 <script>
 import Map from "@/utils/map";
 import Layer from "@/utils/map/layer";
+import { point , rhumbDistance } from '@turf/turf';
 export default {
   mounted() {
     const myMap = new Map({
       container: "map",
       center: [116.390619, 39.924317],
     });
+    this.myMap = myMap;
     myMap.on("load", async () => {
       const urls = [
-        // {
-        //   name: "a",
-        //   url: "https://t7.baidu.com/it/u=4198287529,2774471735&fm=193&f=GIF",
-        //   width: 100,
-        //   height: 100,
-        // },
-        // {
-        //   name: "b",
-        //   url: "https://t7.baidu.com/it/u=2168645659,3174029352&fm=193&f=GIF",
-        //   width: 100,
-        //   height: 100,
-        // },
         {
-          name : 'a',
-          url : require('@/assets/car1.png')
+          name: "a",
+          url: require("@/assets/car1.png"),
         },
         {
-          name : 'b',
-          url : require('@/assets/car2.png')
+          name: "b",
+          url: require("@/assets/car2.png"),
         },
         {
           name: "c",
@@ -47,6 +37,11 @@ export default {
         myMap.addImage(image.name, image.imageData);
       });
       const layer = new Layer(myMap.mapbox);
+      this.layer = layer;
+    });
+  },
+  methods : {
+    addPoint () {
       const geojson = {
         type: "FeatureCollection",
         features: [
@@ -57,9 +52,9 @@ export default {
               coordinates: [116.390629, 39.924317],
             },
             properties: {
-              color: "red",
               icon: "a",
               rotate: 45,
+              title: "a卡车",
             },
           },
           {
@@ -69,55 +64,63 @@ export default {
               coordinates: [116.390329, 39.924717],
             },
             properties: {
-              color: "red",
               icon: "b",
+              title: "b卡车",
               rotate: 34,
             },
           },
         ],
       };
-      layer.addPointLayer({
+      for (let i = 0; i < 100; i++) {
+        geojson.features.push({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [
+              116.390329 + Number((Math.random() / 60).toFixed(6)),
+              39.924717 + Number((Math.random() / 100).toFixed(6)),
+            ],
+          },
+          properties: {
+            icon: Math.random() > 0.5 ? "a" : "b",
+            rotate: parseInt(Math.random() * 360),
+            title: "卡车",
+          },
+        });
+      }
+      this.layer.addPointLayer({
         name: "layer1",
         data: geojson,
-        color: {
-          field: "color",
-          handler(color) {
-            if (color === "red") {
-              return "#f00";
-            } else {
-              return "#fff";
-            }
-          },
-        },
-        shape: 'icon',
+        shape: "icon",
         rotate: {
-          field: "rotate",
-          handler(rotate) {
+          key: "rotate",
+          value(rotate) {
             return rotate;
           },
         },
-        size : 0.3
+        size: 0.4,
       });
-      // setTimeout(() => {
-      //   geojson.features.push({
-      //     type : 'Feature',
-      //     geometry : {
-      //       type : 'Point',
-      //       coordinates : [116.390729, 39.924017]
-      //     },
-      //     properties : {
-      //       color : 'blue',
-      //       icon : 'c',
-      //       rotate : 90
-      //     }
-      //   });
-      //   layer.updateLayer('layer1' , geojson);
-      // } , 3000)
-      myMap.on('mouseup' , 'layer1' , evt => {
-        console.log(evt.features[0].properties.icon)
+      this.myMap.on('click' , 'layer1' , evt => {
+        const cursorLnglat = point([evt.lngLat.lng , evt.lngLat.lat]);
+        let res = [];
+        evt.features.map(item => {
+          item.meters = rhumbDistance(cursorLnglat , point(item.geometry.coordinates));
+          res.push(item.meters);
+          return item;
+        });
+        const min = Math.min.apply(null , res);
+        let feature;
+        evt.features.map(item => {
+          if (item.meters === min) {
+            feature = item;
+          }
+        });
+        
+        console.log(feature.properties.icon)
+        
       })
-    });
-  },
+    }
+  }
 };
 </script>
 <style>
