@@ -14,6 +14,21 @@ class Layer {
     const layer = this.point.addPointLayer(options);
     this._layers.push(layer);
   }
+  addCircleLayer (options) {
+    const layer = this.point.addCircleLayer(options);
+  }
+  addLightDotLayer (options) {
+    const layer = this.point.addLightDotLayer(options);
+  }
+  addTextLayer (options) {
+    const layer = this.point.addTextLayer(options);
+  }
+  addActiveLayer (options) {
+    const layer = this.point.addActiveLayer(options);
+  }
+  addWaterWaveLayer (options) {
+    const layer = this.point.addWaterWaveLayer(options);
+  }
   /**
    * 根据图层名称获取相应的图层
    * @param {string} layerName 图层名称
