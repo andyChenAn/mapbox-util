@@ -6,6 +6,7 @@
       <button @click="addLightDot">addLightDot</button>
       <button @click="addTextLayer">addTextLayer</button>
       <button @click="addActiveLayer">addActiveLayer</button>
+      <button @click="addWaterWaveLayer">addWaterWaveLayer</button>
     </div>
     <div id="map"></div>
   </div>
@@ -276,6 +277,74 @@ export default {
         data : geojson
       })
     },
+    addWaterWaveLayer () {
+      const self = this;
+      const size = 200;
+      let now = Date.now();
+      const wave = {
+        width: size,
+        height: size,
+        data: new Uint8Array(size * size * 4),
+        onAdd() {
+          const canvas = document.createElement("canvas");
+          canvas.width = this.width;
+          canvas.height = this.height;
+          this.context = canvas.getContext("2d");
+        },
+        render() {
+          var duration = 2000;
+          var t = ((Date.now() - now) % duration) / duration;
+          var context = this.context;
+          context.clearRect(0, 0, this.width, this.height);
+          let radius = 0;
+          let radius1 = (size / 2) * 0.5 * t + radius;
+          context.beginPath();
+          context.arc(this.width / 2, this.height / 2, radius1, 0, Math.PI * 2);
+          context.lineWidth = 2;
+          context.strokeStyle = 'rgba(0, 0, 0,' + (1-t) + ')';
+          context.stroke();
+          context.closePath();
+          if (t > 0.3) {
+            let radius2 = (size / 2) * 0.5 * (t - 0.3) + radius;
+            context.beginPath();
+            context.arc(this.width / 2, this.height / 2, radius2, 0, Math.PI * 2);
+            context.lineWidth = 2;
+            context.strokeStyle = 'rgba(0, 0, 0,' + (1) + ')';
+            context.stroke();
+            context.closePath();
+          };
+          if (t > 0.6) {
+            let radius2 = (size / 2) * 0.5 * (t - 0.6) + radius;
+            context.beginPath();
+            context.arc(this.width / 2, this.height / 2, radius2, 0, Math.PI * 2);
+            context.lineWidth = 2;
+            context.strokeStyle = 'rgba(0, 0, 0,' + (1) + ')';
+            context.stroke();
+            context.closePath();
+          }
+          this.data = context.getImageData(0, 0, this.width, this.height).data;
+          self.myMap.mapbox.triggerRepaint();
+          return true;
+        },
+      };
+      this.myMap.addImage('wave', wave, { pixelRatio: 2 });
+      const geojson = {
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [116.390629, 39.924317],
+            }
+          },
+        ],
+      };
+      this.layer.addWaterWaveLayer({
+        name : 'layer6',
+        data : geojson,
+      });
+    }
   },
 };
 </script>

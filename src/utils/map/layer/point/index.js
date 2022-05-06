@@ -148,7 +148,7 @@ class PointLayer {
       source : name,
       type : 'symbol',
       layout : {
-        'icon-image' : 'water',
+        'icon-image' : 'wave',
         'icon-size' : 1,
         'icon-allow-overlap' : true,
       }
