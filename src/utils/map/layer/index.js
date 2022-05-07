@@ -29,6 +29,9 @@ class Layer {
   addWaterWaveLayer (options) {
     const layer = this.point.addWaterWaveLayer(options);
   }
+  addRadarLayer (options) {
+    const layer = this.point.addRadarLayer(options);
+  }
   /**
    * 根据图层名称获取相应的图层
    * @param {string} layerName 图层名称

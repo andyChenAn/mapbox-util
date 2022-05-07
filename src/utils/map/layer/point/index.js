@@ -118,7 +118,7 @@ class PointLayer {
       }
     })
   }
-  // 活动的图层
+  // 动态的图层
   addActiveLayer (options) {
     const { name , data } = options;
     this.mapbox.addSource(name , {
@@ -137,6 +137,7 @@ class PointLayer {
       },
     })
   }
+  // 波纹图
   addWaterWaveLayer (options) {
     const { name , data } = options;
     this.mapbox.addSource(name , {
@@ -151,6 +152,25 @@ class PointLayer {
         'icon-image' : 'wave',
         'icon-size' : 1,
         'icon-allow-overlap' : true,
+        'text-allow-overlap' : true,
+      }
+    })
+  }
+  addRadarLayer (options) {
+    const { name , data } = options;
+    this.mapbox.addSource(name , {
+      type : 'geojson',
+      data : data
+    });
+    this.mapbox.addLayer({
+      id : name,
+      source : name,
+      type : 'symbol',
+      layout : {
+        'icon-image' : 'radar',
+        'icon-size' : 1,
+        'icon-allow-overlap' : true,
+        'text-allow-overlap' : true,
       }
     })
   }
