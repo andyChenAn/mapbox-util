@@ -8,6 +8,7 @@
       <button @click="addActiveLayer">addActiveLayer</button>
       <button @click="addWaterWaveLayer">addWaterWaveLayer</button>
       <button @click="addRadarLayer">addRadarLayer</button>
+      <button @click="removeLayer">removeLayer</button>
     </div>
     <div id="map"></div>
   </div>
@@ -48,6 +49,9 @@ export default {
     });
   },
   methods: {
+    removeLayer () {
+
+    },
     addPoint() {
       const geojson = {
         type: "FeatureCollection",
