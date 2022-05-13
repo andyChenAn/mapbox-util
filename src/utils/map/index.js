@@ -108,7 +108,7 @@ class Map {
   /**
    * 是否存在该张图片
    * @param {string} name 图片名称
-   * @returns 
+   * @returns boolean
    */
   hasImage (name) {
     return this.mapbox.hasImage(name);

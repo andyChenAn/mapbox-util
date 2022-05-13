@@ -1,21 +1,33 @@
 <template>
   <div class="box">
     <div class="btn-box">
-
+      <button @click="addPointLayer">圈图层</button>
     </div>
     <div id="map"></div>
   </div>
 </template>
 <script>
-import M8 from '@/M8';
+import M8 from "@/M8";
+import PointLayer from "@/M8/layers/point";
 export default {
-  mounted () {
+  mounted() {
     this.map = new M8({
-      container : 'map',
+      container: "map",
       center: [116.390619, 39.924317],
     });
-  }
-}
+  },
+  methods: {
+    addPointLayer() {
+      fetch(
+        "https://gw.alipayobjects.com/os/basement_prod/893d1d5f-11d9-45f3-8322-ee9140d288ae.json"
+      ).then(res => res.json()).then(data => {
+        const layer = new PointLayer();
+        layer.source(data)
+        layer.shape('circle')
+      })
+    },
+  },
+};
 </script>
 <style scoped>
 .box {
