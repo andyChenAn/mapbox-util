@@ -1,9 +1,11 @@
 import BaseLayer from "../baseLayer";
 export default class PointLayer extends BaseLayer {
-  constructor (options) {
+  constructor (options = {}) {
     super();
     this.geojson = {};
-    this.attributes = {};
+    for (let key in options) {
+      this[key] = options[key];
+    }
   }
   source (data , options = {}) {
     const geojson = {
@@ -24,8 +26,5 @@ export default class PointLayer extends BaseLayer {
     })
     this.geojson = geojson;
     return this;
-  }
-  shape (type) {
-    
   }
 }

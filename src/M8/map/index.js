@@ -110,4 +110,22 @@ export default class Map {
   updateImage (name , image) {
     this.iconService.updateImage(name , image);
   }
+  addLayer (layer) {
+    this.layerService.addLayer(layer);
+    this.render(layer);
+  }
+  render (layer) {
+    this.mapbox.addLayer({
+      id : layer.name,
+      type : 'symbol',
+      source : {
+        type : 'geojson',
+        data : layer.geojson
+      },
+      layout : {
+        'icon-image' : 'car',
+        'icon-allow-overlap' : true
+      }
+    })
+  }
 }

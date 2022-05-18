@@ -21,9 +21,12 @@ export default {
       fetch(
         "https://gw.alipayobjects.com/os/basement_prod/893d1d5f-11d9-45f3-8322-ee9140d288ae.json"
       ).then(res => res.json()).then(data => {
-        const layer = new PointLayer();
+        const layer = new PointLayer({
+          name : 'andy'
+        });
         layer.source(data)
-        layer.shape('circle')
+        layer.shape('circle');
+        this.map.addLayer(layer);
       })
     },
   },
