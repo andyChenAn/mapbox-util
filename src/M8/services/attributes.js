@@ -1,12 +1,16 @@
 export default class Attributes {
-  constructor (mapbox) {
+  constructor () {
     this.attributes = [];
   }
   add (data) {
     this.attributes.push(data);
   }
-  get () {
+  getAll () {
     return this.attributes;
+  }
+  get (attributeName) {
+    const res = this.attributes.filter(item => item.attributeName === attributeName);
+    return res.length > 0 ? res[0] : '';
   }
   remove (attributeName) {
     for (let i = 0 ; i < this.attributes.length ; i++) {
@@ -15,5 +19,8 @@ export default class Attributes {
         break;
       }
     }
+  }
+  removeAll () {
+    this.attributes = [];
   }
 }

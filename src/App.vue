@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import Map from './components/map';
+import Map from './components/m8';
 export default {
   name: 'App',
   components : {

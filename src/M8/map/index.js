@@ -2,6 +2,8 @@ import mapboxgl , { LngLatBounds } from 'mapbox-gl';
 import IconService from "../services/icon";
 import LayerService from '../services/layer';
 import config from './config';
+import extend from '../extends';
+const iconList = ['cirlce' , 'line' , 'fill' , 'symbol' , 'heatmap']
 export default class Map {
   constructor (options) {
     if (!mapboxgl.supported()) {
@@ -114,17 +116,185 @@ export default class Map {
     this.layerService.addLayer(layer);
     this.render(layer);
   }
+  /**
+   * 初始化图层形状类型
+   * @param {object} attribute 属性对象
+   * @param {object} layer 图层对象
+   */
+  initShapeType (attribute , layer) {
+    const res = {};
+    if (!attribute.attributeValue) {
+      // 如果不存在，那么表示shape方法中只存在一个参数，这个参数表示的就是图层的形状类型
+      res.type = attribute.attributeField;
+    } else {
+      // 如果存在
+      res.type = 'symbol';
+      if (attribute.attributeValue === 'text') {
+        // 如果attributeValue值为text
+        res.layout = {
+          'text-field' : ['get' , attribute.attributeField]
+        }
+      } else {
+        // 如果attributeValue是一个函数
+        layer.geojson.features.map(item => {
+          item.properties['_' + attribute.attributeField] = attribute.attributeValue(item.properties[attribute.attributeField]);
+          return item;
+        });
+        res.layout = {
+          'icon-image' : ['get' , '_' + attribute.attributeField]
+        }
+      }
+    }
+    return res;
+  }
+  /**
+   * 初始化图层颜色
+   * @param {object} attribute 属性对象
+   * @param {object} layer 图层对象
+   */
+  initColor (attribute , layer , layerOptions) {
+    const res = {};
+    // 如果形状类型还没有初始化，那么就先初始化形状类型
+    if (!layerOptions.type) {
+      layerOptions = this.initShapeType(layer.attributesService.attributes.filter(item => item.attributeName === 'shape')[0]);
+    }
+    if (!attribute.attributeValue) {
+      // 如果attributeValue不存在
+      res.paint = {
+        [layerOptions.type === 'symbol' && layerOptions.layout['text-field'] ? 'text-color' : layerOptions.type === 'symbol' && !layerOptions.layout['text-field'] ? 'icon-color' : layerOptions.type + '-color'] : attribute.attributeField
+      }
+    } else {
+      // 如果attributeValue是一个函数
+      if (typeof attribute.attributeValue === 'function') {
+        layer.geojson.features.map(item => {
+          item.properties['_' + attribute.attributeField] = attribute.attributeValue(item.properties[attribute.attributeField]);
+          return item;
+        })
+        res.paint = {
+          [layerOptions.type === 'symbol' && layerOptions.layout['text-field'] ? 'text-color' : layerOptions.type === 'symbol' && !layerOptions.layout['text-field'] ? 'icon-color' : layerOptions.type + '-color'] : ['get' , '_' + attribute.attributeField]
+        }
+      }
+    };
+    return res;
+  }
+  initSize (attribute , layer , layerOptions) {
+    const res = {};
+    // 如果形状类型还没有初始化，那么就先初始化形状类型
+    if (!layerOptions.type) {
+      layerOptions = this.initShapeType(layer.attributesService.attributes.filter(item => item.attributeName === 'shape')[0]);
+    }
+    if (!attribute.attributeValue) {
+      if (layerOptions.type === 'symbol' && layerOptions.layout['text-field']) {
+        // 类型是text（文本）
+        res.layout = {
+          'text-size' : attribute.attributeField
+        }
+      } else if (layerOptions.type === 'symbol' && !layerOptions.layout['text-field']) {
+        // 类型是图标
+        res.layout = {
+          'icon-size' : attribute.attributeField
+        }
+      } else if (layerOptions.type === 'line') {
+        res.paint = {
+          'line-width' : attribute.attributeField
+        }
+      } else if (layerOptions.type === 'circle') {
+        res.paint = {
+          'circle-radius' : attribute.attributeField
+        }
+      }
+    } else {
+      // 如果attributeValue是一个函数
+      if (typeof attribute.attributeValue === 'function') {
+        layer.geojson.features.map(item => {
+          item.properties['_' + attribute.attributeField] = attribute.attributeValue(item[attribute.attributeField]);
+          return item;
+        });
+        if (layerOptions.type === 'symbol' && layerOptions.layout['text-field']) {
+          // 类型是text（文本）
+          res.layout = {
+            'text-size' : ['get' , '_' + attribute.attributeField]
+          }
+        } else if (layerOptions.type === 'symbol' && !layerOptions.layout['text-field']) {
+          // 类型是图标
+          res.layout = {
+            'icon-size' : ['get' , '_' + attribute.attributeField]
+          }
+        } else if (layerOptions.type === 'line') {
+          res.paint = {
+            'line-width' : ['get' , '_' + attribute.attributeField]
+          }
+        } else if (layerOptions.type === 'circle') {
+          res.paint = {
+            'circle-radius' : ['get' , '_' + attribute.attributeField]
+          }
+        }
+      }
+    }
+    return res;
+  }
+  /**
+   * 初始化样式
+   */
+  initStyle (attribute , layer , layerOptions) {
+    const res = {};
+    // 如果形状类型还没有初始化，那么就先初始化形状类型
+    if (!layerOptions.type) {
+      layerOptions = this.initShapeType(layer.attributesService.attributes.filter(item => item.attributeName === 'shape')[0]);
+    };
+    if (layerOptions.type === 'circle') {
+      // 如果是cirlce类型，style样式包括opacity，stroke-width , stroke-color , stroke-opacity
+      for (let key in attribute.attributeValue) {
+        res.paint = (res.paint || (res.paint = {}))
+        res.paint['circle-' + key] = attribute.attributeValue[key];
+      }
+    } else if (layerOptions.type === 'symbol') {
+      // 如果是symbol类型，style样式包括opacity , offset
+      for (let key in attribute.attributeValue) {
+        res.paint = (res.paint || (res.paint = {}))
+        res.paint[`${layerOptions.layout['text-field'] ? 'text' : 'icon'}-${key}`] = attribute.attributeValue[key]
+      }
+    } else if (layerOptions.type === 'line') {
+      // 如果是line类型，style样式包括opacity , offset
+      for (let key in attribute.attributeValue) {
+        res.paint = (res.paint || (res.paint = {}))
+        res.paint['line-' + key] = attribute.attributeValue[key]
+      }
+    }
+    return res;
+  }
   render (layer) {
+    let layerOptions = {} , shape = {} , color = {} , size = {} , style = {};
+    layer.attributesService.attributes.map(item => {
+      if (item.attributeName === 'shape') {
+        shape = this.initShapeType(item , layer , layerOptions);
+        layerOptions = extend(true , layerOptions , shape);
+      };
+      if (item.attributeName === 'color') {
+        color = this.initColor(item , layer , layerOptions);
+        layerOptions = extend(true , layerOptions , color);
+      };
+      if (item.attributeName === 'size') {
+        size = this.initSize(item , layer , layerOptions);
+        layerOptions = extend(true , layerOptions , size);
+      };
+      if (item.attributeName === 'style') {
+        style = this.initStyle(item , layer , layerOptions);
+        layerOptions = extend(true , layerOptions , style);
+      }
+    });
     this.mapbox.addLayer({
       id : layer.name,
-      type : 'symbol',
+      type : layerOptions.type,
       source : {
         type : 'geojson',
         data : layer.geojson
       },
       layout : {
-        'icon-image' : 'car',
-        'icon-allow-overlap' : true
+        ...layerOptions.layout
+      },
+      paint : {
+        ...layerOptions.paint
       }
     })
   }
