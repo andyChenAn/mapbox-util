@@ -2,6 +2,31 @@ import AttributesService from '../services/attributes';
 export default class BaseLayer {
   constructor () {
     this.attributesService = new AttributesService();
+    this.geojson = {};
+  }
+  source (data , options = {}) {
+    if (data.type === 'FeatureCollection') {
+      this.geojson = data;
+      return this;
+    }
+    const geojson = {
+      type : 'FeatureCollection',
+      features : []
+    };
+    data.map(item => {
+      geojson.features.push({
+        type : 'Feature',
+        geometry : {
+          type : 'Point',
+          coordinates : options.parser ? [item[options.parser.x] , item[options.parser.y]] : [item.longitude , item.latitude]
+        },
+        properties : {
+          ...item
+        }
+      })
+    })
+    this.geojson = geojson;
+    return this;
   }
   /**
    * 设置图层的shape类型
@@ -45,4 +70,5 @@ export default class BaseLayer {
       attributeValue : value
     })
   }
+  
 }
