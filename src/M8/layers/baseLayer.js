@@ -1,8 +1,12 @@
 import AttributesService from '../services/attributes';
+import { point, rhumbDistance } from "@turf/turf";
 export default class BaseLayer {
   constructor () {
     this.attributesService = new AttributesService();
     this.geojson = {};
+    this.mapbox = null;
+    // 保存图层图层绑定的事件
+    this.event = {}
   }
   source (data , options = {}) {
     if (data.type === 'FeatureCollection') {
@@ -70,5 +74,41 @@ export default class BaseLayer {
       attributeValue : value
     })
   }
-  
+  on (eventName , handler) {
+    if (!this.event[eventName]) {
+      this.event[eventName] = evt => {
+        // 计算出点击的是合适的图层，当多个图层重合在一起的时候，计算方式是通过计算每个图层点与鼠标点击时的坐标点，两点之间的距离，去最小值，从而得到的就是用户正在点击的图层点
+        let feature;
+        let res = [];
+        if (['mouseup' , 'mousedown' , 'click' , 'dblclick'].indexOf(eventName) > -1) {
+          const cursorLnglat = point([evt.lngLat.lng, evt.lngLat.lat]);
+          evt.features.map((item) => {
+            item.meters = rhumbDistance(
+              cursorLnglat,
+              point(item.geometry.coordinates)
+            );
+            res.push(item.meters);
+            return item;
+          });
+          const min = Math.min.apply(null, res);
+          evt.features.map((item) => {
+            if (item.meters === min) {
+              feature = item;
+            }
+          });
+        } else {
+          feature = evt.features[0];
+        }
+        evt.feature = feature;
+        handler.call(this , evt);
+      };
+      //this.mapbox.on(eventName , this.name , this.event[eventName])
+    }
+  }
+  off (eventName) {
+    if (this.event[eventName]) {
+      this.mapbox.off(eventName , this.name , this.event[eventName]);
+      delete this.event[eventName]
+    }
+  }
 }

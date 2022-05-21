@@ -31,15 +31,17 @@ export default {
         const layer = new PointLayer({
           name : 'andy'
         });
-        layer.source(res).shape('circle').size('mag' , mag => {
-          return mag > 4.5 ? 20 : 15;
-        }).color('mag' , mag => {
+        layer.source(res).shape('circle').size('mag' , [1 , 100]).color('mag' , mag => {
           return mag > 4.5 ? '#5B8FF9' : '#5CCEA1'
         }).style({
           opacity: 0.3,
           'stroke-width': 1
-        });
+        })
         this.map.addLayer(layer);
+        console.log(layer)
+        layer.on('click' , evt => {
+          console.log(evt)
+        });
       })
       // fetch(
       //   "https://gw.alipayobjects.com/os/basement_prod/893d1d5f-11d9-45f3-8322-ee9140d288ae.json"

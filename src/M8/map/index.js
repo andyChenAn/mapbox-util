@@ -114,6 +114,7 @@ export default class Map {
   }
   addLayer (layer) {
     if (!this.layerService.hasLayer(layer)) {
+      layer.mapbox = this.mapbox;
       this.layerService.addLayer(layer);
       this.render(layer);
     }
@@ -250,6 +251,43 @@ export default class Map {
           }
         }
         layer.size = ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField];
+      } else if (Array.isArray(attribute.attributeValue)) {
+        // 找到对应字段的最大值
+        let values = [];
+        layer.geojson.features.map(item => {
+          values.push(item.properties[attribute.attributeField])
+        });
+        const maxValue = Math.max.apply(null , values);
+        const startValue = attribute.attributeValue[0];
+        const endValue = attribute.attributeValue[1];
+        layer.geojson.features.map(item => {
+          let value = parseInt((item.properties[attribute.attributeField] / maxValue) * endValue);
+          if (value <= startValue) {
+            value = startValue;
+          }
+          item.properties['_' + attribute.attributeName + '_' + attribute.attributeField] = value;
+          return item;
+        });
+        if (layerOptions.type === 'symbol' && layerOptions.layout['text-field']) {
+          // 类型是text（文本）
+          res.layout = {
+            'text-size' : ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField]
+          }
+        } else if (layerOptions.type === 'symbol' && !layerOptions.layout['text-field']) {
+          // 类型是图标
+          res.layout = {
+            'icon-size' : ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField]
+          }
+        } else if (layerOptions.type === 'line') {
+          res.paint = {
+            'line-width' : ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField]
+          }
+        } else if (layerOptions.type === 'circle') {
+          res.paint = {
+            'circle-radius' : ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField]
+          }
+        }
+        layer.size = ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField];
       }
     }
     return extend(true , layerOptions , res);;
@@ -297,46 +335,51 @@ export default class Map {
     return extend(true , layerOptions , res);
   }
   render (layer) {
-    let layerOptions = {} , shape = {} , color = {} , size = {} , style = {};
-    layer.attributesService.attributes.map(item => {
-      if (item.attributeName === 'shape') {
-        shape = this.initShapeType(item , layer , layerOptions);
-        layerOptions = extend(true , layerOptions , shape);
-      };
-      if (item.attributeName === 'color') {
-        color = this.initColor(item , layer , layerOptions);
-        layerOptions = extend(true , layerOptions , color);
-      };
-      if (item.attributeName === 'size') {
-        size = this.initSize(item , layer , layerOptions);
-        layerOptions = extend(true , layerOptions , size);
-      };
-      if (item.attributeName === 'style') {
-        style = this.initStyle(item , layer , layerOptions);
-        layerOptions = extend(true , layerOptions , style);
-      }
-    });
-    if (layerOptions.type === 'symbol') {
-      layerOptions = extend(true , layerOptions , {
-        layout : {
-          'icon-allow-overlap' : true,
-          'text-allow-overlap' : true
+    Promise.resolve().then(() => {
+      let layerOptions = {} , shape = {} , color = {} , size = {} , style = {};
+      layer.attributesService.attributes.map(item => {
+        if (item.attributeName === 'shape') {
+          shape = this.initShapeType(item , layer , layerOptions);
+          layerOptions = extend(true , layerOptions , shape);
+        };
+        if (item.attributeName === 'color') {
+          color = this.initColor(item , layer , layerOptions);
+          layerOptions = extend(true , layerOptions , color);
+        };
+        if (item.attributeName === 'size') {
+          size = this.initSize(item , layer , layerOptions);
+          layerOptions = extend(true , layerOptions , size);
+        };
+        if (item.attributeName === 'style') {
+          style = this.initStyle(item , layer , layerOptions);
+          layerOptions = extend(true , layerOptions , style);
         }
-      })
-    };
-    this.mapbox.addLayer({
-      id : layer.name,
-      type : layerOptions.type,
-      source : {
-        type : 'geojson',
-        data : layer.geojson
-      },
-      layout : {
-        ...layerOptions.layout
-      },
-      paint : {
-        ...layerOptions.paint
+      });
+      if (layerOptions.type === 'symbol') {
+        layerOptions = extend(true , layerOptions , {
+          layout : {
+            'icon-allow-overlap' : true,
+            'text-allow-overlap' : true
+          }
+        })
+      };
+      this.mapbox.addLayer({
+        id : layer.name,
+        type : layerOptions.type,
+        source : {
+          type : 'geojson',
+          data : layer.geojson
+        },
+        layout : {
+          ...layerOptions.layout
+        },
+        paint : {
+          ...layerOptions.paint
+        }
+      });
+      for (let eventName in layer.event) {
+        this.mapbox.on(eventName , layer.name , layer.event[eventName]);
       }
-    });
+    })
   }
 }
