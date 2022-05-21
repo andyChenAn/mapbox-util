@@ -10,6 +10,10 @@ export default class BaseLayer {
   }
   source (data , options = {}) {
     if (data.type === 'FeatureCollection') {
+      data.features.map((item , index) => {
+        item.id = index;
+        return item;
+      })
       this.geojson = data;
       return this;
     }
@@ -17,9 +21,10 @@ export default class BaseLayer {
       type : 'FeatureCollection',
       features : []
     };
-    data.map(item => {
+    data.map((item , index) => {
       geojson.features.push({
         type : 'Feature',
+        id : index,
         geometry : {
           type : 'Point',
           coordinates : options.parser ? [item[options.parser.x] , item[options.parser.y]] : [item.longitude , item.latitude]
@@ -67,6 +72,27 @@ export default class BaseLayer {
     this.setAttribute('style' , '' , options);
     return this;
   }
+  hover (options) {
+    this.on('mousemove' , this.handleMousemove);
+    this.on('mouseleave' , this.handleMouseleave);
+    this.setAttribute('hover' , '' , options);
+    return this;
+  }
+  handleMousemove (evt) {
+    if (evt.features.length > 0) {
+      if (this.hoverStateId) {
+        this.mapbox.setFeatureState({source : this.name , id : this.hoverStateId} , {hover : false});
+      }
+      this.hoverStateId = evt.features[0].id;
+      this.mapbox.setFeatureState({source : this.name , id : this.hoverStateId} , {hover : true});
+    }
+  }
+  handleMouseleave (evt) {
+    if (!evt.features) {
+      console.log('离开图层')
+      return;
+    }
+  }
   setAttribute (type , field , value) {
     this.attributesService.add({
       attributeName : type,
@@ -102,7 +128,6 @@ export default class BaseLayer {
         evt.feature = feature;
         handler.call(this , evt);
       };
-      //this.mapbox.on(eventName , this.name , this.event[eventName])
     }
   }
   off (eventName) {

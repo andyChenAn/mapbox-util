@@ -177,26 +177,26 @@ export default class Map {
     }
     if (!attribute.attributeValue) {
       layer.geojson.features.map(item => {
-        item.properties['$$' + attribute.attributeName] = attribute.attributeField;
+        item.properties['_' + attribute.attributeName + '_' + attribute.attributeField] = attribute.attributeField;
         return item;
       })
       // 如果attributeValue不存在
       res.paint = {
-        [layerOptions.type === 'symbol' && layerOptions.layout['text-field'] ? 'text-color' : layerOptions.type === 'symbol' && !layerOptions.layout['text-field'] ? 'icon-color' : layerOptions.type + '-color'] : ['get' , '$$' + attribute.attributeName]
+        [layerOptions.type === 'symbol' && layerOptions.layout['text-field'] ? 'text-color' : layerOptions.type === 'symbol' && !layerOptions.layout['text-field'] ? 'icon-color' : layerOptions.type + '-color'] : ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField]
       }
     } else {
       // 如果attributeValue是一个函数
       if (typeof attribute.attributeValue === 'function') {
         layer.geojson.features.map(item => {
-          item.properties['$$' + attribute.attributeName] = attribute.attributeValue(item.properties[attribute.attributeField]);
+          item.properties['_' + attribute.attributeName + '_' + attribute.attributeField] = attribute.attributeValue(item.properties[attribute.attributeField]);
           return item;
         })
         res.paint = {
-          [layerOptions.type === 'symbol' && layerOptions.layout['text-field'] ? 'text-color' : layerOptions.type === 'symbol' && !layerOptions.layout['text-field'] ? 'icon-color' : layerOptions.type + '-color'] : ['get' , '$$' + attribute.attributeName]
+          [layerOptions.type === 'symbol' && layerOptions.layout['text-field'] ? 'text-color' : layerOptions.type === 'symbol' && !layerOptions.layout['text-field'] ? 'icon-color' : layerOptions.type + '-color'] : ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField]
         }
       }
     };
-    layer.color = ['get' , '$$' + attribute.attributeName];
+    layer.color = ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField];
     return extend(true , layerOptions , res);
   }
   initSize (attribute , layer , layerOptions) {
@@ -207,55 +207,53 @@ export default class Map {
       layerOptions = this.initShapeType(layer.attributesService.attributes.filter(item => item.attributeName === 'shape')[0] , layer);
     }
     if (!attribute.attributeValue) {
-      layer.geojson.features.map(item => {
-        item.properties['$$' + attribute.attributeName] = attribute.attributeField;
-        return item;
-      });
       if (layerOptions.type === 'symbol' && layerOptions.layout['text-field']) {
         // 类型是text（文本）
         res.layout = {
-          'text-size' : ['get' , '$$' + attribute.attributeName]
+          'text-size' : attribute.attributeField
         }
       } else if (layerOptions.type === 'symbol' && !layerOptions.layout['text-field']) {
         // 类型是图标
         res.layout = {
-          'icon-size' : ['get' , '$$' + attribute.attributeName]
+          'icon-size' : attribute.attributeField
         }
       } else if (layerOptions.type === 'line') {
         res.paint = {
-          'line-width' : ['get' , '$$' + attribute.attributeName]
+          'line-width' : attribute.attributeField
         }
       } else if (layerOptions.type === 'circle') {
         res.paint = {
-          'circle-radius' : ['get' , '$$' + attribute.attributeName]
+          'circle-radius' : attribute.attributeField
         }
       }
+      layer.size = attribute.attributeField;
     } else {
       // 如果attributeValue是一个函数
       if (typeof attribute.attributeValue === 'function') {
         layer.geojson.features.map(item => {
-          item.properties['get' , '$$' + attribute.attributeName] = attribute.attributeValue(item.properties[attribute.attributeField]);
+          item.properties['_' + attribute.attributeName + '_' + attribute.attributeField] = attribute.attributeValue(item.properties[attribute.attributeField]);
           return item;
         });
         if (layerOptions.type === 'symbol' && layerOptions.layout['text-field']) {
           // 类型是text（文本）
           res.layout = {
-            'text-size' : ['get' , '$$' + attribute.attributeName]
+            'text-size' : ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField]
           }
         } else if (layerOptions.type === 'symbol' && !layerOptions.layout['text-field']) {
           // 类型是图标
           res.layout = {
-            'icon-size' : ['get' , '$$' + attribute.attributeName]
+            'icon-size' : ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField]
           }
         } else if (layerOptions.type === 'line') {
           res.paint = {
-            'line-width' : ['get' , '$$' + attribute.attributeName]
+            'line-width' : ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField]
           }
         } else if (layerOptions.type === 'circle') {
           res.paint = {
-            'circle-radius' : ['get' , '$$' + attribute.attributeName]
+            'circle-radius' : ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField]
           }
         }
+        layer.size = ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField];
       } else if (Array.isArray(attribute.attributeValue)) {
         // 找到对应字段的最大值
         let values = [];
@@ -270,38 +268,37 @@ export default class Map {
           if (value <= startValue) {
             value = startValue;
           }
-          item.properties['get' , '$$' + attribute.attributeName] = value;
+          item.properties['_' + attribute.attributeName + '_' + attribute.attributeField] = value;
           return item;
         });
         if (layerOptions.type === 'symbol' && layerOptions.layout['text-field']) {
           // 类型是text（文本）
           res.layout = {
-            'text-size' : ['get' , '$$' + attribute.attributeName]
+            'text-size' : ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField]
           }
         } else if (layerOptions.type === 'symbol' && !layerOptions.layout['text-field']) {
           // 类型是图标
           res.layout = {
-            'icon-size' : ['get' , '$$' + attribute.attributeName]
+            'icon-size' : ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField]
           }
         } else if (layerOptions.type === 'line') {
           res.paint = {
-            'line-width' : ['get' , '$$' + attribute.attributeName]
+            'line-width' : ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField]
           }
         } else if (layerOptions.type === 'circle') {
           res.paint = {
-            'circle-radius' : ['get' , '$$' + attribute.attributeName]
+            'circle-radius' : ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField]
           }
         }
+        layer.size = ['get' , '_' + attribute.attributeName + '_' + attribute.attributeField];
       }
     }
-    layer.size = ['get' , '$$' + attribute.attributeName];
     return extend(true , layerOptions , res);;
   }
   /**
    * 初始化样式
    */
   initStyle (attribute , layer , layerOptions) {
-    layer.styleInited = true;
     const res = {};
     // 如果形状类型还没有初始化，那么就先初始化形状类型
     if (!layer.shapeInited) {
@@ -340,30 +337,9 @@ export default class Map {
     }
     return extend(true , layerOptions , res);
   }
-  initHover (attribute , layer , layerOptions) {
-    const res = {};
-
-    // 如果形状类型还没有初始化，那么就先初始化形状类型
-    if (!layer.shapeInited) {
-      layerOptions = this.initShapeType(layer.attributesService.attributes.filter(item => item.attributeName === 'shape')[0] , layer);
-    };
-    if (!layer.colorInited) {
-      layerOptions = extend(true , layerOptions , this.initColor(layer.attributesService.attributes.filter(item => item.attributeName === 'color')[0] , layer , layerOptions))
-    }
-
-    if (layerOptions.type === 'circle') {
-      let opacity = layer.attributesService.attributes.filter(item => item.attributeName === 'style')[0].attributeValue['opacity'];
-      opacity = opacity ? opacity : 0;
-      res.paint = {
-        'circle-color' : ['case' , ['boolean' , ['feature-state' , 'hover'] , false] , attribute.attributeValue['color'] , layer.color],
-        'circle-opacity' : ['case' , ['boolean' , ['feature-state' , 'hover'] , false] , attribute.attributeValue['opacity'] , opacity]
-      }
-    }
-    return extend(true , layerOptions , res);
-  }
   render (layer) {
     Promise.resolve().then(() => {
-      let layerOptions = {} , shape = {} , color = {} , size = {} , style = {} , hover = {};
+      let layerOptions = {} , shape = {} , color = {} , size = {} , style = {};
       layer.attributesService.attributes.map(item => {
         if (item.attributeName === 'shape') {
           shape = this.initShapeType(item , layer , layerOptions);
@@ -380,10 +356,6 @@ export default class Map {
         if (item.attributeName === 'style') {
           style = this.initStyle(item , layer , layerOptions);
           layerOptions = extend(true , layerOptions , style);
-        };
-        if (item.attributeName === 'hover') {
-          hover = this.initHover(item , layer , layerOptions);
-          layerOptions = extend(true , layerOptions , hover);
         }
       });
       if (layerOptions.type === 'symbol') {
@@ -394,14 +366,13 @@ export default class Map {
           }
         })
       };
-      this.mapbox.addSource(layer.name , {
-        type : 'geojson',
-        data : layer.geojson
-      });
       this.mapbox.addLayer({
         id : layer.name,
         type : layerOptions.type,
-        source : layer.name,
+        source : {
+          type : 'geojson',
+          data : layer.geojson
+        },
         layout : {
           ...layerOptions.layout
         },

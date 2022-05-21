@@ -36,6 +36,9 @@ export default {
         }).style({
           opacity: 0.3,
           'stroke-width': 1
+        }).hover({
+          color : '#000',
+          opacity : 0.6
         })
         this.map.addLayer(layer);
         console.log(layer)
