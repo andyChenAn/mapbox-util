@@ -3,7 +3,8 @@ import IconService from "../services/icon";
 import LayerService from '../services/layer';
 import config from './config';
 import extend from '../extends';
-const iconList = ['cirlce' , 'line' , 'fill' , 'symbol' , 'heatmap']
+import { createWaterWaveShape } from '../icons';
+const shapeList = ['circle' , 'line' , 'fill' , 'symbol' , 'heatmap']
 export default class Map {
   constructor (options) {
     if (!mapboxgl.supported()) {
@@ -16,6 +17,8 @@ export default class Map {
     this.iconService = new IconService(this.mapbox);
     // 图层管理
     this.layerService = new LayerService(this.mapbox);
+    // 鼠标是否放在图层上
+    this.hoverLayer = false;
     // 初始化地图手势
     this.initMapCursor();
   }
@@ -39,12 +42,16 @@ export default class Map {
   initMapCursor () {
     const canvas = this.getCanvas();
     canvas.style.cursor = 'grab';
-    this.mapbox.on('mousedown' , () => {
-      canvas.style.cursor = 'grabbing';
-    });
-    this.mapbox.on('mouseup' , () => {
-      canvas.style.cursor = 'grab';
-    })
+    // this.mapbox.on('mousedown' , (evt) => {
+    //   if (!this.hoverLayer) {
+    //     canvas.style.cursor = 'grabbing';
+    //   }
+    // });
+    // this.mapbox.on('mouseup' , () => {
+    //   if (!this.hoverLayer) {
+    //     canvas.style.cursor = 'grab';
+    //   }
+    // })
   }
   /**
    * 获取mapbox地图样式
@@ -140,8 +147,16 @@ export default class Map {
     layer.shapeInited = true;
     const res = {};
     if (!attribute.attributeValue) {
-      // 如果不存在，那么表示shape方法中只存在一个参数，这个参数表示的就是图层的形状类型
-      res.type = attribute.attributeField;
+      if (shapeList.indexOf(attribute.attributeField) > -1) {
+        // 如果不存在，那么表示shape方法中只存在一个参数，这个参数表示的就是图层的形状类型
+        res.type = attribute.attributeField;
+      } else {
+        res.type = 'symbol';
+        res.customType = attribute.attributeField;
+        res.layout = {
+          'icon-image' : attribute.attributeField
+        }
+      }
     } else {
       // 如果存在
       res.type = 'symbol';
@@ -180,6 +195,7 @@ export default class Map {
         item.properties['$$' + attribute.attributeName] = attribute.attributeField;
         return item;
       })
+      layerOptions.layout = layerOptions.layout || (layerOptions.layout = {});
       // 如果attributeValue不存在
       res.paint = {
         [layerOptions.type === 'symbol' && layerOptions.layout['text-field'] ? 'text-color' : layerOptions.type === 'symbol' && !layerOptions.layout['text-field'] ? 'icon-color' : layerOptions.type + '-color'] : ['get' , '$$' + attribute.attributeName]
@@ -218,8 +234,14 @@ export default class Map {
         }
       } else if (layerOptions.type === 'symbol' && !layerOptions.layout['text-field']) {
         // 类型是图标
-        res.layout = {
-          'icon-size' : ['get' , '$$' + attribute.attributeName]
+        if (shapeList.indexOf(layerOptions.customType) > -1) {
+          res.layout = {
+            'icon-size' : ['get' , '$$' + attribute.attributeName]
+          }
+        } else {
+          res.layout = {
+            'icon-size' : 1
+          }
         }
       } else if (layerOptions.type === 'line') {
         res.paint = {
@@ -268,7 +290,7 @@ export default class Map {
         layer.geojson.features.map(item => {
           let value = parseInt((item.properties[attribute.attributeField] / maxValue) * endValue);
           if (value <= startValue) {
-            value = startValue;
+            value = 0;
           }
           item.properties['get' , '$$' + attribute.attributeName] = value;
           return item;
@@ -342,21 +364,34 @@ export default class Map {
   }
   initHover (attribute , layer , layerOptions) {
     const res = {};
-
+    this.hoverInited = true;
     // 如果形状类型还没有初始化，那么就先初始化形状类型
     if (!layer.shapeInited) {
       layerOptions = this.initShapeType(layer.attributesService.attributes.filter(item => item.attributeName === 'shape')[0] , layer);
     };
     if (!layer.colorInited) {
       layerOptions = extend(true , layerOptions , this.initColor(layer.attributesService.attributes.filter(item => item.attributeName === 'color')[0] , layer , layerOptions))
-    }
-
-    if (layerOptions.type === 'circle') {
-      let opacity = layer.attributesService.attributes.filter(item => item.attributeName === 'style')[0].attributeValue['opacity'];
+    };
+    let opacity = 1;
+    if (layer.attributesService.attributes.filter(item => item.attributeName === 'style').length > 0) {
+      opacity = layer.attributesService.attributes.filter(item => item.attributeName === 'style')[0].attributeValue['opacity'];
       opacity = opacity ? opacity : 0;
+    }
+    let aColor = attribute.attributeValue['color'];
+    aColor = aColor ? aColor : layer.color;
+    let aOpacity = attribute.attributeValue['opacity'];
+    aOpacity = aOpacity === undefined ? 0.6 : aOpacity;
+    if (layerOptions.type === 'circle') {
       res.paint = {
-        'circle-color' : ['case' , ['boolean' , ['feature-state' , 'hover'] , false] , attribute.attributeValue['color'] , layer.color],
-        'circle-opacity' : ['case' , ['boolean' , ['feature-state' , 'hover'] , false] , attribute.attributeValue['opacity'] , opacity]
+        'circle-color' : ['case' , ['boolean' , ['feature-state' , 'hover'] , false] , aColor , layer.color],
+        'circle-opacity' : ['case' , ['boolean' , ['feature-state' , 'hover'] , false] , aOpacity , opacity]
+      }
+    } else if (layerOptions.type === 'symbol') {
+      if (layerOptions.layout['text-field']) {
+        res.paint = {
+          'text-color' : ['case' , ['boolean' , ['feature-state' , 'hover'] , false] , aColor , layer.color],
+          'text-opacity' : ['case' , ['boolean' , ['feature-state' , 'hover'] , false] , aOpacity , opacity],
+        }
       }
     }
     return extend(true , layerOptions , res);
@@ -364,6 +399,16 @@ export default class Map {
   render (layer) {
     Promise.resolve().then(() => {
       let layerOptions = {} , shape = {} , color = {} , size = {} , style = {} , hover = {};
+      // 这里这么做的原因是将attribute重新进行排序，按照一定的先后顺序去初始化
+      let temp = [];
+      ['shape' , 'color' , 'size' , 'style' , 'hover'].map(item => {
+        layer.attributesService.attributes.map(attr => {
+          if (item === attr.attributeName) {
+            temp.push(attr)
+          }
+        })
+      });
+      layer.attributesService.attributes = temp;
       layer.attributesService.attributes.map(item => {
         if (item.attributeName === 'shape') {
           shape = this.initShapeType(item , layer , layerOptions);
@@ -394,6 +439,13 @@ export default class Map {
           }
         })
       };
+      if (layerOptions.customType) {
+        const color = layer.attributesService.get('color').attributeField;
+        const size = layer.attributesService.get('size').attributeField;
+        const icon = createWaterWaveShape(this.mapbox , {size , color});
+        // 如果想要修改图标的颜色，那么必须设置sdf为true，并通过match表达式来设置
+        this.addImage(layerOptions.customType , icon , {pixelRatio: 2 , sdf : true});
+      }
       this.mapbox.addSource(layer.name , {
         type : 'geojson',
         data : layer.geojson
@@ -412,6 +464,18 @@ export default class Map {
       for (let eventName in layer.event) {
         this.mapbox.on(eventName , layer.name , layer.event[eventName]);
       }
+      this.mapbox.on('mousemove' , layer.name , this.handleMousemove.bind(this));
+      this.mapbox.on('mouseleave' , layer.name , this.handleMouseleave.bind(this))
     })
+  }
+  handleMousemove () {
+    this.hoverLayer = true;
+    const canvas = this.getCanvas();
+    canvas.style.cursor = 'pointer';
+  }
+  handleMouseleave () {
+    this.hoverLayer = false;
+    const canvas = this.getCanvas();
+    canvas.style.cursor = 'grab';
   }
 }

@@ -11,7 +11,7 @@ export default class BaseLayer {
   source (data , options = {}) {
     if (data.type === 'FeatureCollection') {
       data.features.map((item , index) => {
-        item.id = index;
+        item.id = ++index;
         return item;
       })
       this.geojson = data;
@@ -68,11 +68,11 @@ export default class BaseLayer {
    * 设置图层的样式
    * @param {object} options 样式对象，包括opacity, stroke , strokeWidth
    */
-  style (options) {
+  style (options = {}) {
     this.setAttribute('style' , '' , options);
     return this;
   }
-  hover (options) {
+  hover (options = {}) {
     this.on('mousemove' , this.handleMousemove);
     this.on('mouseleave' , this.handleMouseleave);
     this.setAttribute('hover' , '' , options);
@@ -88,10 +88,10 @@ export default class BaseLayer {
     }
   }
   handleMouseleave (evt) {
-    if (!evt.features) {
-      console.log('离开图层')
-      return;
+    if (this.hoverStateId) {
+      this.mapbox.setFeatureState({source : this.name , id : this.hoverStateId} , {hover : false})
     }
+    this.hoverStateId = null;
   }
   setAttribute (type , field , value) {
     this.attributesService.add({
@@ -123,7 +123,7 @@ export default class BaseLayer {
             }
           });
         } else {
-          feature = evt.features[0];
+          feature = evt.features ? evt.features[0] : null;
         }
         evt.feature = feature;
         handler.call(this , evt);

@@ -16,6 +16,12 @@ export default class LayerService {
           this.mapbox.removeLayer(layer);
           this.mapbox.removeSource(layer);
           this.layerList.splice(i , 1);
+          let event = this.layerList[i].event
+          if (Object.keys(event).length > 0) {
+            for (let eventName in event) {
+              this.mapbox.off(eventName , this.layerList[i].name , event[eventName]);
+            }
+          }
           break;
         }
       } else {
@@ -23,6 +29,12 @@ export default class LayerService {
           this.mapbox.removeLayer(layer.name);
           this.mapbox.removeSource(layer.name);
           this.layerList.splice(i , 1);
+          let event = this.layerList[i].event
+          if (Object.keys(event).length > 0) {
+            for (let eventName in event) {
+              this.mapbox.off(eventName , this.layerList[i].name , event[eventName]);
+            }
+          }
           break;
         }
       }
@@ -32,6 +44,12 @@ export default class LayerService {
     this.layerList.map(layer => {
       this.mapbox.removeLayer(layer.name);
       this.mapbox.removeSource(layer.name);
+      let event = layer.event
+      if (Object.keys(event).length > 0) {
+        for (let eventName in event) {
+          this.mapbox.off(eventName , layer.name , event[eventName]);
+        }
+      }
     })
     this.layerList = [];
   }
