@@ -1,4 +1,6 @@
-import createWaterWaveShape from './waterWave';
+import createActiveCirlce from './activeCircle';
+import createWaterWave from './waterWave';
 export {
-  createWaterWaveShape
+  createActiveCirlce,
+  createWaterWave
 }

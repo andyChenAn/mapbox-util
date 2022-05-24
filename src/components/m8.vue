@@ -76,9 +76,7 @@ export default {
         const layer = new PointLayer({
           name : 'peter'
         });
-        layer.source(res).shape('waterWave').color('mag' , mag => {
-          return mag > 2 ? '#006aff' : '#ff0'
-        }).size(80).style({
+        layer.source(res).shape('waterWave').color('#007aff').size(30).style({
           opacity : 1
         })
         this.map.addLayer(layer)

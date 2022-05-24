@@ -3,7 +3,7 @@ import IconService from "../services/icon";
 import LayerService from '../services/layer';
 import config from './config';
 import extend from '../extends';
-import { createWaterWaveShape } from '../icons';
+import { createActiveCirlce , createWaterWave } from '../icons';
 const shapeList = ['circle' , 'line' , 'fill' , 'symbol' , 'heatmap']
 export default class Map {
   constructor (options) {
@@ -19,6 +19,8 @@ export default class Map {
     this.layerService = new LayerService(this.mapbox);
     // 鼠标是否放在图层上
     this.hoverLayer = false;
+    // 添加一些自定义的图标
+    this.addCustomIcon();
     // 初始化地图手势
     this.initMapCursor();
   }
@@ -35,6 +37,12 @@ export default class Map {
    */
   getCanvas () {
     return this.mapbox.getCanvas();
+  }
+  /**
+   * 添加自定义图标
+   */
+  addCustomIcon () {
+    
   }
   /**
    * 初始化地图手势
@@ -440,11 +448,15 @@ export default class Map {
         })
       };
       if (layerOptions.customType) {
-        const color = layer.attributesService.get('color').attributeField;
-        const size = layer.attributesService.get('size').attributeField;
-        const icon = createWaterWaveShape(this.mapbox , {size , color});
-        // 如果想要修改图标的颜色，那么必须设置sdf为true，并通过match表达式来设置
-        this.addImage(layerOptions.customType , icon , {pixelRatio: 2 , sdf : true});
+        if (!this.hasImage(layerOptions.customType)) {
+          const color = layer.attributesService.get('color') && layer.attributesService.get('color').attributeField;
+          const size = layer.attributesService.get('size') && layer.attributesService.get('size').attributeField;
+          const icon = createActiveCirlce(this.mapbox , {size , color});
+          const icon1 = createWaterWave(this.mapbox , { size , color })
+          // 如果想要修改图标的颜色，那么必须设置sdf为true，并通过match表达式来设置
+          //this.addImage(layerOptions.customType , icon , {pixelRatio: 2 });
+          this.addImage(layerOptions.customType , icon1 , {pixelRatio: 2 });
+        }
       }
       this.mapbox.addSource(layer.name , {
         type : 'geojson',

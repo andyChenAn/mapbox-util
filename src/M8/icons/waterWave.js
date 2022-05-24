@@ -1,44 +1,82 @@
 /**
  * 水波纹
  */
-export default function createWaterWaveShape (mapbox , options) {
-  const { size = 48 , color } = options;
+export default function createWaterWave (mapbox , options) {
   return {
-    width : size,
-    height : size,
-    data: new Uint8Array(size * size * 4),
+    width: 60,
+    height: 60,
+    data: new Uint8Array(60 * 60 * 4),
     onAdd() {
       const canvas = document.createElement("canvas");
       canvas.width = this.width;
       canvas.height = this.height;
       this.context = canvas.getContext("2d");
+      this.size = 60;
+      this.radius1 = 0;
+      this.radius2 = -10;
+      this.radius3 = -20;
     },
     render() {
-      var duration = 1000;
-      var t = (performance.now() % duration) / duration;
-      var radius = (size / 2) * 0.3;
-      var outerRadius = (size / 2) * 0.5 * t + radius;
       var context = this.context;
-      // draw outer circle
+      if (this.radius1 > this.size / 2) {
+        this.radius1 = 0;
+      }
+      if (this.radius2 > this.size / 2) {
+        this.radius2 = 0;
+      }
+      if (this.radius3 > this.size / 2) {
+        this.radius3 = 0;
+      }
+      this.radius1 += 0.5;
+      this.radius2 += 0.5;
+      this.radius3 += 0.5;
       context.clearRect(0, 0, this.width, this.height);
       context.beginPath();
       context.arc(
         this.width / 2,
         this.height / 2,
-        outerRadius,
+        this.radius1,
         0,
         Math.PI * 2
       );
-      context.fillStyle = "rgba(255, 200, 200," + (1 - t) + ")";
-      context.fill();
+      context.lineWidth = 3;
+      context.strokeStyle =
+        "rgba(255, 0, 0 , " + (1 - this.radius1 / (this.size / 2)) + ")";
+      context.stroke();
 
       context.beginPath();
-      context.arc(this.width / 2, this.height / 2, radius, 0, Math.PI * 2);
-      context.fillStyle = color;
-      context.strokeStyle = "white";
-      context.lineWidth = 2 + 4 * (1 - t);
-      context.fill();
+      context.arc(
+        this.width / 2,
+        this.height / 2,
+        this.radius2 < 0 ? 0 : this.radius2,
+        0,
+        Math.PI * 2
+      );
+      context.lineWidth = 3;
+      context.strokeStyle =
+        "rgba(255, 0, 0 , " + (1 - this.radius2 / (this.size / 2)) + ")";
       context.stroke();
+
+      context.beginPath();
+      context.arc(
+        this.width / 2,
+        this.height / 2,
+        this.radius3 < 0 ? 0 : this.radius3,
+        0,
+        Math.PI * 2
+      );
+      context.lineWidth = 3;
+      context.strokeStyle =
+        "rgba(255, 0, 0 , " + (1 - this.radius3 / (this.size / 2)) + ")";
+      context.stroke();
+
+      // context.beginPath();
+      // context.arc(this.width / 2, this.height / 2, 20, 0, Math.PI * 2);
+      // context.fillStyle = 'rgb(255 , 0 , 0)';
+      // context.strokeStyle = '#fff'
+      // context.lineWidth = 5;
+      // context.stroke();
+      // context.fill();
       this.data = context.getImageData(0, 0, this.width, this.height).data;
       mapbox.triggerRepaint();
       return true;
